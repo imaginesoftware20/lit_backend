@@ -6,29 +6,11 @@ var service = new services();
 /*exports.getinfo = functions.https.onRequest(async (req, res) => {
   
   let code = req.get('key');
-  
   const words = service.words(code);
-
   if(words[0] !== service.key())
   res.status(400).send({ error: "Bhak Bhosadike"});
-
   const newPost = etc(words[1]);
-  //res.send(service.key());
   
-  var ref = db.ref("gameinfo/gameid/"+words[1]);
-  
-  //Retrieve the value from DB
-  ref.on("value", (snapshot) => {
-    var newPost = snapshot.val();
-    //res.send(newPost);
-      res.send("USER => " + words[1] + "\nHello " + newPost.alias + " with no " + newPost.playerno + " in game " + newPost.gameid);    
-    },
-    //Send the error back as respond
-    (errorObject) => {
-      res.send("The read failed: " + errorObject.code);
-      //return errorObject;
-    });  
-
   });*/
 
 
@@ -87,17 +69,18 @@ exports.createroom = functions.https.onRequest(async (req, res) => {
   //Setting value in DB
   var Ref = ref.child(ranstr);
   Ref.set({
-    1: { cards: cards.p1 },
-    2: { cards: cards.p2 },
-    3: { cards: cards.p3 },
-    4: { cards: cards.p4 },
-    5: { cards: cards.p5 },
-    6: { cards: cards.p6 },
-    logs: logs,
+    1: { cards: cards.p1, "no_of_cards": 9 },
+    2: { cards: cards.p2, "no_of_cards": 9 },
+    3: { cards: cards.p3, "no_of_cards": 9 },
+    4: { cards: cards.p4, "no_of_cards": 9 },
+    5: { cards: cards.p5, "no_of_cards": 9 },
+    6: { cards: cards.p6, "no_of_cards": 9 },
+    logs: parseInt(logs),
     turn: 1,
     dropped_sets: "",
-    last_transaction_drop: "false",
-    score: "0:0"
+    last_transaction_drop: false,
+    score_odd: 0,
+    score_even: 0
   });
 
   //Send the respond back
@@ -173,32 +156,39 @@ exports.transaction = functions.https.onRequest(async (req, res) => {
     res.status(400).send({ error: "Players in the same team"});
   }
 
-  service.setdrop(db, gameid, "false");
+  service.setdrop(db, gameid, false);
 
   //Declare 2 arrays to store cards of the 2 players
   var pa = [], pb = [];
 
-  //Connect to DB
-  var ref = db.ref(gameid);
+  try
+  {
+    //Connect to DB
+    var ref = db.ref(gameid);
 
-  //Retrieve the cards from DB
-  ref.once('value').then(function(snapshot) {
-      var newPost = snapshot.val();
-      var infoa = newPost[playera];
-      var infob = newPost[playerb];
-      pa = infoa['cards'];
-      pb = infob['cards'];
-      
-      //Check if the transaction was successful or not
-      var success = service.transac(pa, pb, card, db, gameid, playera, playerb);
-      service.transf(db, gameid, playerb);
-      res.send({ was_successful: success });
-    }.catch(() => null),
-    //Send the error back as respond
-    (errorObject) => {
-      res.send("The read failed: " + errorObject.code);
-    }).catch(() => null);  
+    //Retrieve the cards from DB
+    ref.once('value').then((snapshot) => {
+        var newPost = snapshot.val();
+        var infoa = newPost[playera];
+        var infob = newPost[playerb];
+        pa = infoa['cards'];
+        pb = infob['cards'];
 
+        //Check if the transaction was successful or not
+        var success = service.transac(pa, pb, card, db, gameid, playera, playerb);
+        service.transf(db, gameid, playerb);
+        res.send({ was_successful: success });
+        return null;
+      },
+      //Send the error back as respond
+      (errorObject) => {
+        res.send("The read failed: " + errorObject.code);
+      }).catch(() => null);  
+  }
+  catch(err)
+  {
+      console.log(err + "     \n    " + err.message);
+  }
   
 });
 
@@ -232,31 +222,39 @@ exports.drop = functions.https.onRequest(async (req, res) => {
   //Declare 2 arrays to store cards of the 2 players
   var pa = [], pb = [], pc = [], dropped_sets = [];
 
-  //console.log(cardsa);
-  //Connect to DB
-  var ref = db.ref(gameid);
+  try
+  {
+    //console.log(cardsa);
+    //Connect to DB
+    var ref = db.ref(gameid);
 
-  //Retrieve the cards from DB
-  ref.once('value').then(function(snapshot) {
-      var newPost = snapshot.val();
-      var infoa = newPost[playera];
-      var infob = newPost[playerb];
-      var infoc = newPost[playerc];
-      var score = newPost['score'];
-      dropped_sets = newPost['dropped_sets'];
-      pa = infoa['cards'];
-      pb = infob['cards'];
-      pc = infoc['cards'];
+    //Retrieve the cards from DB
+    ref.once('value').then((snapshot) => {
+        var newPost = snapshot.val();
+        var infoa = newPost[playera];
+        var infob = newPost[playerb];
+        var infoc = newPost[playerc];
+        var score_odd = newPost['score_odd'];
+        var score_even = newPost['score_even'];
+        dropped_sets = newPost['dropped_sets'];
+        pa = infoa['cards'];
+        pb = infob['cards'];
+        pc = infoc['cards'];
 
-      //Check if the transaction was successful or not
-      var success = service.drop(pa, pb, pc, cardsa, cardsb, cardsc, db, gameid, playera, playerb, playerc, score, dropped_sets);
-      res.send({ was_successful: success });
-    }.catch(() => null),
-    //Send the error back as respond
-    (errorObject) => {
-      res.send("The read failed: " + errorObject.code);
-    }).catch(() => null);  
-
+        //Check if the transaction was successful or not
+        var success = service.drop(pa, pb, pc, cardsa, cardsb, cardsc, db, gameid, playera, playerb, playerc, score_odd, score_even, dropped_sets);
+        res.send({ was_successful: success });
+        return null;
+      },
+      //Send the error back as respond
+      (errorObject) => {
+        res.send("The read failed: " + errorObject.code);
+      }).catch(() => null);  
+  }
+  catch(err)
+  {
+      console.log(err + "     \n    " + err.message);
+  }
   
 });  
 
@@ -284,27 +282,39 @@ exports.transfer = functions.https.onRequest(async (req, res) => {
     res.status(400).send({ error: "Players not in the same team"});
   }*/
 
-  //Connect to DB
-  var ref = db.ref(gameid);
+  try
+  {
+    //Connect to DB
+    var ref = db.ref(gameid);
 
-  //Retrieve the cards from DB
-  ref.once('value').then(function(snapshot) {
-      var newPost = snapshot.val();
+    //Retrieve the cards from DB
+    ref.once('value').then((snapshot) => {
+        var newPost = snapshot.val();
 
-      //Check if the transfer is legal or not
-      if (newPost[turn] === playera && newPost[last_transaction_drop] === "true")
-      {
-          //Update player turn in DB
-          var success = service.transf(db, gameid, playerb);
-          res.send({ was_successful: success });    
-      }
-      
-    }.catch(() => null),
-    //Send the error back as respond
-    (errorObject) => {
-      res.send("The read failed: " + errorObject.code);
-    }).catch(() => null);  
-
+        console.log(newPost['turn']);
+        console.log(newPost['last_transaction_drop']);
+        //Check if the transfer is legal or not
+        if ((newPost['turn'] === parseInt(playera)) && (newPost['last_transaction_drop'] === true))
+        {
+            //Update player turn in DB
+            var success = service.transf(db, gameid, playerb);
+            res.send({ was_successful: success });    
+        }
+        else
+        {
+            res.status(400).send({ error: "Transfer not legal"});
+        }
+        return null;
+      },
+      //Send the error back as respond
+      (errorObject) => {
+        res.send("The read failed: " + errorObject.code);
+      }).catch(() => null);  
+  }
+  catch(err)
+  {
+      console.log(err + "     \n    " + err.message);
+  }
   
 });
 

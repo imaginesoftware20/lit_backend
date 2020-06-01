@@ -137,13 +137,15 @@ module.exports = function () {
             //Update Cards of players 1 in DB
             var usersRefa = Ref.child(playera);
             usersRefa.set({
-              "cards": pa
+              "cards": pa,
+              "no_of_cards": pa.length
             });
 
             //Update Cards of players 2 in DB
             var usersRefb = Ref.child(playerb);
             usersRefb.set({
-              "cards": pb
+              "cards": pb,
+              "no_of_cards": pb.length
             });
 
           }
@@ -191,21 +193,23 @@ module.exports = function () {
             //Update Cards of players in DB
             var usersRef = Ref.child(gameid);
             usersRef.update({
-                "turn": playerb,
-                "last_transaction_drop": "false"
+                "turn": parseInt(playerb),
+                "last_transaction_drop": false
             });
+            return true;
 
         }
         catch(err)
         {
             console.log(err + "     \n    " + err.message);
+            return false;
         }
         
      
     }
 
 
-    this.drop = function(pa, pb, pc, cardsa, cardsb, cardsc, db, gameid, playera, playerb, playerc, score, dropped_sets)
+    this.drop = function(pa, pb, pc, cardsa, cardsb, cardsc, db, gameid, playera, playerb, playerc, score_odd, score_even, dropped_sets)
     {
         var i;
         for (i = 0; i < cardsa.length; i++)
@@ -248,26 +252,37 @@ module.exports = function () {
             //Update alias in db
             var usersRefa = Ref.child(playera);
             usersRefa.set({
-                "cards": pa
+                "cards": pa,
+                "no_of_cards": pa.length
             });
             var usersRefb = Ref.child(playerb);
             usersRefb.set({
-                "cards": pb
+                "cards": pb,
+                "no_of_cards": pb.length
             });
             var usersRefc = Ref.child(playerc);
             usersRefc.set({
-                "cards": pc
+                "cards": pc,
+                "no_of_cards": pc.length
             });
 
-            var scores = score.split(':');
+            var ref = db.ref();
+            var usersRef = ref.child(gameid);
             var final;
+            
             if(playera%2===0)
             {
-                final = String(scores[0]) + ":" + (parseInt(scores[1])+1);
+                final = parseInt(score_even) + 1;
+                usersRef.update({
+                    "score_even": parseInt(final)
+                });
             }
             else
             {
-                final = String(parseInt(scores[0])+1) + ":" + scores[1];
+                final = parseInt(score_odd) + 1;
+                usersRef.update({
+                    "score_odd": parseInt(final)
+                });
             }
             
             var dropped_card = cardsa[0];
@@ -299,13 +314,9 @@ module.exports = function () {
             }
             dropped_set.push(current_dropped_set);
 
-            var ref = db.ref();
-
             //Update Cards of players in DB
-            var usersRef = ref.child(gameid);
             usersRef.update({
-                "last_transaction_drop": "true",
-                "score": final,
+                "last_transaction_drop": true,
                 "dropped_sets": dropped_set
             });
             
