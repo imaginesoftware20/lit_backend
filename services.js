@@ -2,12 +2,96 @@ const person = require('./person.js');
 
 module.exports = function () {
     
+    var mapping = new Map([ 
+        ["spades_2","spades_lower"], ["spades_3","spades_lower"], ["spades_4","spades_lower"],
+        ["spades_5","spades_lower"], ["spades_6","spades_lower"], ["spades_7","spades_lower"],
+        ["spades_9","spades_higher"], ["spades_t","spades_higher"], ["spades_j","spades_higher"],
+        ["spades_q","spades_higher"], ["spades_k","spades_higher"], ["spades_a","spades_higher"],
+        ["hearts_2","hearts_lower"], ["hearts_3","hearts_lower"], ["hearts_4","hearts_lower"], 
+        ["hearts_5","hearts_lower"], ["hearts_6","hearts_lower"], ["hearts_7","hearts_lower"],
+        ["hearts_9","hearts_higher"], ["hearts_t","hearts_higher"], ["hearts_j","hearts_higher"], 
+        ["hearts_q","hearts_higher"], ["hearts_k","hearts_higher"], ["hearts_a","hearts_higher"], 
+        ["clubs_2","clubs_lower"], ["clubs_3","clubs_lower"], ["clubs_4","clubs_lower"], 
+        ["clubs_5","clubs_lower"], ["clubs_6","clubs_lower"], ["clubs_7","clubs_lower"], 
+        ["clubs_9","clubs_higher"], ["clubs_t","clubs_higher"], ["clubs_j","clubs_higher"], 
+        ["clubs_q","clubs_higher"], ["clubs_k","clubs_higher"], ["clubs_a","clubs_higher"], 
+        ["diamonds_2","diamonds_lower"], ["diamonds_3","diamonds_lower"], ["diamonds_4","diamonds_lower"], 
+        ["diamonds_5","diamonds_lower"], ["diamonds_6","diamonds_lower"], ["diamonds_7","diamonds_lower"], 
+        ["diamonds_9","diamonds_higher"], ["diamonds_t","diamonds_higher"], ["diamonds_j","diamonds_higher"], 
+        ["diamonds_q","diamonds_higher"], ["diamonds_k","diamonds_higher"], ["diamonds_a","diamonds_higher"], 
+        ["diamonds_8","jokers"], ["spades_8","jokers"], ["hearts_8","jokers"], 
+        ["clubs_8","jokers"], ["joker_b","jokers"], ["joker_r","jokers"] ]); 
+
+
+    this.set_name = function(card)
+    {
+        return mapping.get(card);
+    }    
+    function compare(a , b) 
+    {
+        try
+        {
+            var startA = a.charAt(0);
+            var startB = b.charAt(0);
+            var endA = a.charAt(a.length-1);
+            var endB = b.charAt(b.length-1);
+            if (startA === 'j' || endA === '8') {
+                return 1;
+            }
+            if (startB === 'j' || endB === '8') {
+                return -1;
+            }
+            if (a < b) {
+                return -1;
+            }
+            if (a > b) {
+                return 1;
+            }
+
+            // names must be equal
+            return 0;
+        }
+        catch(err)
+        {
+            console.log(err + "     \n    " + err.message);
+            return err;
+        }
+    }
+
+    function update_cards(db, gameid, pa, playera) 
+    {
+        try
+        {
+            var Ref = db.ref(gameid);
+
+            //Update alias in db
+            var usersRefa = Ref.child(playera);
+            usersRefa.update({
+                "cards": pa,
+                "no_of_cards": pa.length
+            });
+            return;
+        }
+        catch(err)
+        {
+            console.log(err + "     \n    " + err.message);
+            return err;
+        }
+    }
     
     this.words = function(code)
     {
-        let buff = new Buffer(code, 'base64');
-        let text = buff.toString('ascii');
-        return text.split(':');
+        try
+        {
+            let buff = new Buffer(code, 'base64');
+            let text = buff.toString('ascii');
+            return text.split(':');
+        }
+        catch(err)
+        {
+            console.log(err + "     \n    " + err.message);
+            return err;
+        }
     }
 
     //Create Gameid by adding timestamp to a random string
@@ -26,89 +110,107 @@ module.exports = function () {
             }
             return result + dtstr.substring(0,dtstr.search("GMT")) + Date.now();
 
-        }catch(err) 
+        }
+        catch(err) 
         {
-            return err + "     \n    " + err.message;
+            console.log(err + "     \n    " + err.message);
+            return err;
         }
     }
 
     this.shuffle = function()
     {
-        var deck = new Map([ [1,"spades_2"], [2,"clubs_a"], [3,"diamonds_7"], [4,"hearts_4"], [5,"clubs_3"], 
-        [6,"diamonds_8"], [7,"hearts_7"], [8,"clubs_k"], [9,"clubs_2"], [10,"spades_q"], 
-        [11,"hearts_j"], [12,"spades_3"],[13,"hearts_2"], [14,"clubs_q"], [15,"diamonds_6"], 
-        [16,"spades_8"], [17,"diamonds_9"], [18,"spades_a"], [19,"diamonds_5"], [20,"clubs_j"],
-        [21,"diamonds_a"], [22,"hearts_9"],[23,"spades_4"], [24,"clubs_t"], [25,"diamonds_t"], 
-        [26,"hearts_5"], [27,"spades_9"], [28,"clubs_9"], [29,"hearts_3"], [30,"hearts_a"],
-        [31,"spades_k"], [32,"clubs_8"],[33,"diamonds_4"], [34,"diamonds_j"], [35,"spades_5"], 
-        [36,"hearts_t"], [37,"clubs_7"], [38,"spades_t"], [39,"hearts_8"], [40,"diamonds_3"], 
-        [41,"clubs_6"], [42,"diamonds_q"],[43,"joker_r"], [44,"spades_6"], [45,"hearts_6"], 
-        [46,"diamonds_k"], [47,"clubs_5"], [48,"diamonds_2"], [49,"spades_j"], [50,"hearts_k"], 
-        [51,"hearts_q"], [52,"joker_b"],[53,"spades_7"], [54,"clubs_4"] ]); 
-
-        var j;
-
-        var shuffle = new Map();
-
-        for(j = 0; j < 54; j++)
+        try
         {
-            for(;;)
+            var deck = new Map([ [1,"spades_2"], [2,"clubs_a"], [3,"diamonds_7"], [4,"hearts_4"], [5,"clubs_3"], 
+            [6,"diamonds_8"], [7,"hearts_7"], [8,"clubs_k"], [9,"clubs_2"], [10,"spades_q"], 
+            [11,"hearts_j"], [12,"spades_3"],[13,"hearts_2"], [14,"clubs_q"], [15,"diamonds_6"], 
+            [16,"spades_8"], [17,"diamonds_9"], [18,"spades_a"], [19,"diamonds_5"], [20,"clubs_j"],
+            [21,"diamonds_a"], [22,"hearts_9"],[23,"spades_4"], [24,"clubs_t"], [25,"diamonds_t"], 
+            [26,"hearts_5"], [27,"spades_9"], [28,"clubs_9"], [29,"hearts_3"], [30,"hearts_a"],
+            [31,"spades_k"], [32,"clubs_8"],[33,"diamonds_4"], [34,"diamonds_j"], [35,"spades_5"], 
+            [36,"hearts_t"], [37,"clubs_7"], [38,"spades_t"], [39,"hearts_8"], [40,"diamonds_3"], 
+            [41,"clubs_6"], [42,"diamonds_q"],[43,"joker_r"], [44,"spades_6"], [45,"hearts_6"], 
+            [46,"diamonds_k"], [47,"clubs_5"], [48,"diamonds_2"], [49,"spades_j"], [50,"hearts_k"], 
+            [51,"hearts_q"], [52,"joker_b"],[53,"spades_7"], [54,"clubs_4"] ]); 
+
+            var j;
+
+            var shuffle = new Map();
+
+            for(j = 0; j < 54; j++)
             {
-                rancard = Math.floor(Math.random() * (54)) + 1;
-                var card = deck.get(rancard);
-                if(shuffle.has(card))
+                for(;;)
                 {
-                    continue;
+                    rancard = Math.floor(Math.random() * (54)) + 1;
+                    var card = deck.get(rancard);
+                    if(shuffle.has(card))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        shuffle.set(card,0);
+                        break;
+                    }   
                 }
-                else
-                {
-                    shuffle.set(card,0);
-                    break;
-                }   
             }
+            return shuffle;
         }
-        return shuffle;
+        catch(err)
+        {
+            console.log(err + "     \n    " + err.message);
+            return err;
+        }
     }
 
     this.cards = function(shuffle)
     {
-        var j, p1 = [], p2 = [], p3 = [], p4 = [], p5 = [], p6 = [];
-
-        const iterator = shuffle.keys();
-
-        for(j = 0; j < 54; j++)
+        try 
         {
-            switch(j%6) 
-            {
-            case 0:
-                p1.push(iterator.next().value);
-                break;
-            case 1:
-                p2.push(iterator.next().value);
-                break;
-            case 2:
-                p3.push(iterator.next().value);
-                break;
-            case 3:
-                p4.push(iterator.next().value);
-                break;
-            case 4:
-                p5.push(iterator.next().value);
-                break;
-            case 5:
-                p6.push(iterator.next().value);
-                break;
-            }
-        }
-        
-        p1.sort();
-        p2.sort();
-        p3.sort();
-        p4.sort();
-        p5.sort();
-        p6.sort();
+            var j, p1 = [], p2 = [], p3 = [], p4 = [], p5 = [], p6 = [];
 
-        return new person(p1, p2, p3, p4, p5, p6);
+            const iterator = shuffle.keys();
+
+            for(j = 0; j < 54; j++)
+            {
+                switch(j%6) 
+                {
+                case 0:
+                    p1.push(iterator.next().value);
+                    break;
+                case 1:
+                    p2.push(iterator.next().value);
+                    break;
+                case 2:
+                    p3.push(iterator.next().value);
+                    break;
+                case 3:
+                    p4.push(iterator.next().value);
+                    break;
+                case 4:
+                    p5.push(iterator.next().value);
+                    break;
+                case 5:
+                    p6.push(iterator.next().value);
+                    break;
+                }
+            }
+            
+            p1.sort(compare);
+            p2.sort(compare);
+            p3.sort(compare);
+            p4.sort(compare);
+            p5.sort(compare);
+            p6.sort(compare);
+
+            return new person(p1, p2, p3, p4, p5, p6);
+        }
+        catch(err)
+        {
+            console.log(err + "     \n    " + err.message);
+            return err;
+        }
     }
 
     this.key = function()
@@ -119,7 +221,39 @@ module.exports = function () {
         return "aW1hZ2luZS5zb2Z0d2FyZQ==";
     }
 
-    this.transac = function(pa, pb, card, db, gameid, playera, playerb)
+    this.update_logs = function(db, gameid, logs, logs_count, current_log)
+    {
+        try 
+        {
+            if(logs === "")
+            {
+                logs = [];
+            }
+            if(logs.length === logs_count)
+            {
+                logs.splice(0,1);
+            }
+            
+            logs.push(current_log);
+            
+            var Ref = db.ref();
+
+            //Update logs in DB
+            var usersRef = Ref.child(gameid);
+            usersRef.update({
+                "logs": logs
+            });
+
+            return;
+        }
+        catch(err)
+        {
+            console.log(err + "     \n    " + err.message);
+            return err;
+        }
+    }
+
+    this.transac = function(pa, pb, card, db, gameid, playera, playerb, aliasa, aliasb, logs, logs_count)
     {
         if(pb.includes(card))
         {
@@ -130,35 +264,36 @@ module.exports = function () {
             
             //Add card to First Player's Hand
             pa.push(card);
-            pa.sort();
+            pa.sort(compare);
             
-            var Ref = db.ref(gameid);
+            update_cards(db, gameid, pa, playera); 
+            update_cards(db, gameid, pb, playerb); 
 
-            //Update Cards of players 1 in DB
-            var usersRefa = Ref.child(playera);
-            usersRefa.set({
-              "cards": pa,
-              "no_of_cards": pa.length
-            });
-
-            //Update Cards of players 2 in DB
-            var usersRefb = Ref.child(playerb);
-            usersRefb.set({
-              "cards": pb,
-              "no_of_cards": pb.length
-            });
+            var current_log = aliasa + " successfully snatched " + card + " from " + aliasb + "'s cripling hands.";
+            this.update_logs(db, gameid, logs, logs_count, current_log);
 
           }
           catch(err)
           {
             console.log(err + "     \n    " + err.message);
+            return err;
           }
           
           return true;
         }
         else
-        {            
-            return false ;
+        {
+            try
+            {
+                var current_log = aliasa + " was brutally denied by " + aliasb + " for " + card;
+                this.update_logs(db, gameid, logs, logs_count, current_log);
+                return false;
+            }
+            catch(err)
+            {
+                console.log(err + "     \n    " + err.message);
+                return err;
+            }
         }
     }
 
@@ -179,9 +314,8 @@ module.exports = function () {
         catch(err)
         {
             console.log(err + "     \n    " + err.message);
+            return err;
         }
-        
-     
     }
 
     this.transf = function(db, gameid, playerb)
@@ -203,122 +337,31 @@ module.exports = function () {
         {
             console.log(err + "     \n    " + err.message);
             return false;
-        }
-        
-     
+        }     
     }
 
-
-    this.drop = function(pa, pb, pc, cardsa, cardsb, cardsc, db, gameid, playera, playerb, playerc, score_odd, score_even, dropped_sets)
+    this.setscore = function(playera, db, gameid, success, score_odd, score_even)
     {
-        var i;
-        for (i = 0; i < cardsa.length; i++)
-        {
-            if(!pa.includes(cardsa[i]))
-            {
-                return false ;
-            }
-            else
-            {
-                pa.splice(pa.indexOf(cardsa[i]),1);
-            }
-        }
-        for (i = 0; i < cardsb.length; i++)
-        {
-            if(!pb.includes(cardsb[i]))
-            {
-                return false ;
-            }
-            else
-            {
-                pb.splice(pb.indexOf(cardsb[i]),1);
-            }
-        }
-        for (i = 0; i < cardsc.length; i++)
-        {
-            if(!pc.includes(cardsc[i]))
-            {
-                return false ;
-            }
-            else
-            {
-                pc.splice(pc.indexOf(cardsc[i]),1);
-            }
-        }
         try
-        {               
-            var Ref = db.ref(gameid);
-
-            //Update alias in db
-            var usersRefa = Ref.child(playera);
-            usersRefa.set({
-                "cards": pa,
-                "no_of_cards": pa.length
-            });
-            var usersRefb = Ref.child(playerb);
-            usersRefb.set({
-                "cards": pb,
-                "no_of_cards": pb.length
-            });
-            var usersRefc = Ref.child(playerc);
-            usersRefc.set({
-                "cards": pc,
-                "no_of_cards": pc.length
-            });
-
+        {
+            var final;
             var ref = db.ref();
             var usersRef = ref.child(gameid);
-            var final;
-            
-            if(playera%2===0)
+                
+            if((playera%2===0 && success === true) || (playera%2!==0 && success === false))
             {
                 final = parseInt(score_even) + 1;
                 usersRef.update({
                     "score_even": parseInt(final)
                 });
             }
-            else
+            else if((playera%2===0 && success  === false) || (playera%2!==0 && success === true))
             {
                 final = parseInt(score_odd) + 1;
                 usersRef.update({
                     "score_odd": parseInt(final)
                 });
             }
-            
-            var dropped_card = cardsa[0];
-            var current_dropped_set = "";
-            var card_length = dropped_card.length-1;
-            var card_numb = dropped_card.charAt(card_length);
-            var prefix = dropped_card.substring(0,card_length);
-            
-            if(card_numb==='7' || card_numb==='6' || card_numb==='5' || card_numb==='4' || card_numb==='3' || card_numb==='2')
-            {
-                current_dropped_set = current_dropped_set + prefix + "lower";
-            }
-            else if(card_numb==='a' || card_numb==='k' || card_numb==='q' || card_numb==='j' || card_numb==='t' || card_numb===9)
-            {
-                current_dropped_set = current_dropped_set + prefix + "higher";
-            }
-            else if(card_numb==='b' || card_numb==='r' || card_numb===8)
-            {
-                current_dropped_set = current_dropped_set + "jokers";
-            }
-            
-            if(dropped_sets === "")
-            {
-                dropped_set = [];
-            }
-            else
-            {
-                dropped_set = dropped_sets;
-            }
-            dropped_set.push(current_dropped_set);
-
-            //Update Cards of players in DB
-            usersRef.update({
-                "last_transaction_drop": true,
-                "dropped_sets": dropped_set
-            });
             
             return true;
         }
@@ -327,7 +370,107 @@ module.exports = function () {
             console.log(err + "     \n    " + err.message);
             return err;
         }
-        
+    }
 
+    this.wrongdrop = function(db, gameid, dropped_set, plcards)
+    {
+        try
+        {
+            var i;
+            for (let [playerno, playercards] of plcards) 
+            {
+                for (i = 0; i < playercards.length; )
+                {
+                    if(mapping.get(playercards[i]) === dropped_set)
+                    {
+                        playercards.splice(i,1);
+                    }
+                    else i++;
+                }
+                update_cards(db, gameid, playercards, playerno); 
+            }
+            return;
+        }
+        catch(err)
+        {
+            console.log(err + "     \n    " + err.message);
+            return err;
+        }
+    }
+
+    this.drop = function(cardsa, cardsb, cardsc, db, gameid, dropped_sets, plcards)
+    {
+        try
+        {
+            var i=0;
+            var current_dropped_set = mapping.get(cardsa[0]);
+            if(dropped_sets === "")
+            {
+                dropped_sets = [];
+            }
+            dropped_sets.push(current_dropped_set);
+            
+            var ref = db.ref();
+            var usersRef = ref.child(gameid);
+            //Update Cards of players in DB
+            usersRef.update({
+                "last_transaction_drop": true,
+                "dropped_sets": dropped_sets
+            });
+
+            var keys = Array.from(plcards.keys());
+
+            var playera = keys[i++];
+            var pa = plcards.get(playera);
+            var playerb = keys[i++];
+            var pb = plcards.get(playerb);
+            var playerc = keys[i++];
+            var pc = plcards.get(playerc);
+
+            for (i = 0; i < cardsa.length; i++)
+            {
+                if(!pa.includes(cardsa[i]))
+                {
+                    return false ;
+                }
+                else
+                {
+                    pa.splice(pa.indexOf(cardsa[i]),1);
+                }
+            }
+            for (i = 0; i < cardsb.length; i++)
+            {
+                if(!pb.includes(cardsb[i]))
+                {
+                    return false ;
+                }
+                else
+                {
+                    pb.splice(pb.indexOf(cardsb[i]),1);
+                }
+            }
+            for (i = 0; i < cardsc.length; i++)
+            {
+                if(!pc.includes(cardsc[i]))
+                {
+                    return false ;
+                }
+                else
+                {
+                    pc.splice(pc.indexOf(cardsc[i]),1);
+                }
+            }
+                       
+            update_cards(db, gameid, pa, playera); 
+            update_cards(db, gameid, pb, playerb); 
+            update_cards(db, gameid, pc, playerc); 
+
+            return true;
+        }
+        catch(err)
+        {
+            console.log(err + "     \n    " + err.message);
+            return err;
+        }
     }
 }

@@ -39,7 +39,10 @@ exports.createroom = functions.https.onRequest(async (req, res) => {
 
   //Check if the hit is genuine
   if(words[0] !== service.key())
-  res.status(400).send({ error: "Bhak Bhosadike"});
+  {
+    res.status(400).send({ error: "Bhak Bhosadike"}).end();
+    return;
+  }
 
   //Get the userid from the decoded key
   const userid = words[1];
@@ -69,13 +72,14 @@ exports.createroom = functions.https.onRequest(async (req, res) => {
   //Setting value in DB
   var Ref = ref.child(ranstr);
   Ref.set({
-    1: { cards: cards.p1, "no_of_cards": 9 },
-    2: { cards: cards.p2, "no_of_cards": 9 },
-    3: { cards: cards.p3, "no_of_cards": 9 },
-    4: { cards: cards.p4, "no_of_cards": 9 },
-    5: { cards: cards.p5, "no_of_cards": 9 },
-    6: { cards: cards.p6, "no_of_cards": 9 },
-    logs: parseInt(logs),
+    1: { cards: cards.p1, "no_of_cards": 9, "alias": "-", "userid": "-" },
+    2: { cards: cards.p2, "no_of_cards": 9, "alias": "-", "userid": "-" },
+    3: { cards: cards.p3, "no_of_cards": 9, "alias": "-", "userid": "-" },
+    4: { cards: cards.p4, "no_of_cards": 9, "alias": "-", "userid": "-" },
+    5: { cards: cards.p5, "no_of_cards": 9, "alias": "-", "userid": "-" },
+    6: { cards: cards.p6, "no_of_cards": 9, "alias": "-", "userid": "-" },
+    logs_count: parseInt(logs),
+    logs: "",
     turn: 1,
     dropped_sets: "",
     last_transaction_drop: false,
@@ -98,7 +102,10 @@ exports.joinroom = functions.https.onRequest(async (req, res) => {
 
   //Check if the hit is genuine
   if(words[0] !== service.key())
-  res.status(400).send({ error: "Bhak Bhosadike"});
+  {
+    res.status(400).send({ error: "Bhak Bhosadike"}).end();
+    return;
+  }
 
   //Get the userid from the decoded key
   const userid = words[1];
@@ -140,7 +147,10 @@ exports.transaction = functions.https.onRequest(async (req, res) => {
 
   //Check if the hit is genuine
   if(words[0] !== service.key())
-  res.status(400).send({ error: "Bhak Bhosadike"});
+  {
+    res.status(400).send({ error: "Bhak Bhosadike"}).end();
+    return;
+  }
 
   //Get the userid from the decoded key
   const userid = words[1];
@@ -153,7 +163,8 @@ exports.transaction = functions.https.onRequest(async (req, res) => {
 
   if((playera%2===0 && playerb%2===0 ) || (playera%2!==0 && playerb%2!==0))
   {
-    res.status(400).send({ error: "Players in the same team"});
+    res.status(400).send({ error: "Players in the same team"}).end();
+    return;
   }
 
   service.setdrop(db, gameid, false);
@@ -169,14 +180,19 @@ exports.transaction = functions.https.onRequest(async (req, res) => {
     //Retrieve the cards from DB
     ref.once('value').then((snapshot) => {
         var newPost = snapshot.val();
-        var infoa = newPost[playera];
-        var infob = newPost[playerb];
-        pa = infoa['cards'];
-        pb = infob['cards'];
-
+        var pa = newPost[playera]['cards'];
+        var pb = newPost[playerb]['cards'];
+        var logs = newPost['logs'];
+        var logs_count = newPost['logs_count'];
+        var aliasa = newPost[playera]['alias'];
+        var aliasb = newPost[playera]['alias'];
+        
         //Check if the transaction was successful or not
-        var success = service.transac(pa, pb, card, db, gameid, playera, playerb);
-        service.transf(db, gameid, playerb);
+        var success = service.transac(pa, pb, card, db, gameid, playera, playerb, aliasa, aliasb, logs, logs_count);
+        if(success === false)
+        {
+          service.transf(db, gameid, playerb);
+        }
         res.send({ was_successful: success });
         return null;
       },
@@ -200,7 +216,10 @@ exports.drop = functions.https.onRequest(async (req, res) => {
 
   //Check if the hit is genuine
   if(words[0] !== service.key())
-  res.status(400).send({ error: "Bhak Bhosadike"});
+  {
+    res.status(400).send({ error: "Bhak Bhosadike"}).end();
+    return;
+  }
 
   //Get the userid from the decoded key
   const userid = words[1];
@@ -209,40 +228,83 @@ exports.drop = functions.https.onRequest(async (req, res) => {
   const playera = req.query.playera;
   const playerb = req.query.playerb;
   const playerc = req.query.playerc;
-  const cardsa  = req.query.cardsa;
-  const cardsb  = req.query.cardsb;
-  const cardsc  = req.query.cardsc;
+  var cardsa = req.query.cardsa;
+  var cardsb = req.query.cardsb;
+  var cardsc = req.query.cardsc;
   const gameid  = req.query.gameid;
+
+  if(cardsa === undefined)
+  {
+    cardsa = [];
+  }
+  if(cardsb === undefined)
+  {
+    cardsb = [];
+  }
+  if(cardsc === undefined)
+  {
+    cardsc = [];
+  }
 
   if((playera%2===0 && (playerb%2!==0 || playerc%2!==0)) || (playera%2!==0 && (playerb%2===0 || playerc%2===0)))
   {
-    res.status(400).send({ error: "Players not in the same team"});
+    res.status(400).send({ error: "Players not in the same team"}).end();
+    return;
   }
 
   //Declare 2 arrays to store cards of the 2 players
-  var pa = [], pb = [], pc = [], dropped_sets = [];
+  var pa = [], pb = [], pc = [], pd = [], pe = [], pf = [], playerd, playere, playerf, dropped_sets = [];
+
+  if(playera%2===0)
+  {
+    playerd = 1;
+    playere = 3;
+    playerf = 5;
+  }
+  else
+  {
+    playerd = 2;
+    playere = 4;
+    playerf = 6;
+  }
 
   try
   {
-    //console.log(cardsa);
     //Connect to DB
     var ref = db.ref(gameid);
 
     //Retrieve the cards from DB
     ref.once('value').then((snapshot) => {
         var newPost = snapshot.val();
-        var infoa = newPost[playera];
-        var infob = newPost[playerb];
-        var infoc = newPost[playerc];
+
+        var plcards = new Map([ [playera,newPost[playera]['cards']], [playerb,newPost[playerb]['cards']],
+                                [playerc,newPost[playerc]['cards']], [playerd,newPost[playerd]['cards']],
+                                [playere,newPost[playere]['cards']], [playerf,newPost[playerf]['cards']] ]); 
+
+        var logs = newPost['logs'];
+        var logs_count = newPost['logs_count'];
+        var aliasa = newPost[playera]['alias'];
         var score_odd = newPost['score_odd'];
         var score_even = newPost['score_even'];
         dropped_sets = newPost['dropped_sets'];
-        pa = infoa['cards'];
-        pb = infob['cards'];
-        pc = infoc['cards'];
-
+        
         //Check if the transaction was successful or not
-        var success = service.drop(pa, pb, pc, cardsa, cardsb, cardsc, db, gameid, playera, playerb, playerc, score_odd, score_even, dropped_sets);
+        var success = service.drop(cardsa, cardsb, cardsc, db, gameid, dropped_sets, plcards);
+        service.setscore(playera, db, gameid, success, score_odd, score_even);
+        var current_dropped_set = service.set_name(cardsa[0]);
+
+        if (success === true)
+        {
+          var current_log = aliasa + " correctly dropped the set " + current_dropped_set;
+          service.update_logs(db, gameid, logs, logs_count, current_log);
+        }
+        else
+        {
+          var current_log = aliasa + " incorrectly dropped " + current_dropped_set;
+          service.update_logs(db, gameid, logs, logs_count, current_log);
+          service.wrongdrop(db, gameid, current_dropped_set, plcards);
+        }
+
         res.send({ was_successful: success });
         return null;
       },
@@ -267,7 +329,10 @@ exports.transfer = functions.https.onRequest(async (req, res) => {
 
   //Check if the hit is genuine
   if(words[0] !== service.key())
-  res.status(400).send({ error: "Bhak Bhosadike"});
+  {
+    res.status(400).send({ error: "Bhak Bhosadike"}).end();
+    return;
+  }
 
   //Get the userid from the decoded key
   const userid = words[1];
@@ -302,7 +367,8 @@ exports.transfer = functions.https.onRequest(async (req, res) => {
         }
         else
         {
-            res.status(400).send({ error: "Transfer not legal"});
+            res.status(400).send({ error: "Transfer not legal"}).end();
+            return;
         }
         return null;
       },
@@ -327,7 +393,10 @@ exports.leaveroom = functions.https.onRequest(async (req, res) => {
 
   //Check if the hit is genuine
   if(words[0] !== service.key())
-  res.status(400).send({ error: "Bhak Bhosadike"});
+  {
+    res.status(400).send({ error: "Bhak Bhosadike"}).end();
+    return;
+  }
 
   //Get the userid from the decoded key
   const userid = words[1];
@@ -341,16 +410,16 @@ exports.leaveroom = functions.https.onRequest(async (req, res) => {
   
   //Update alias in db
   var usersRef = ref.child(playerno);
-  usersRef.remove();
+  usersRef.update({
+    "connected": false
+  });
 
   res.status(200).send();
   
 });
 
 //firebase deploy --only functions
-//curl -X GET -H 'userid: qw13' -v -i 'https://us-central1-litt-276414.cloudfunctions.net/createroom?gameid=123&playerno=2&alias=haha'
 //C:\Work\Git_repo\app\src\main\java\com\dojo\lit\lit\model
 //YVcxaFoybHVaUzV6YjJaMGQyRnlaUT09OnF3MTI=  
 //set GOOGLE_APPLICATION_CREDENTIALS=C:\Work\key.json
 //firebase emulators:start --only functions
-//https://us-central1-litt-276414.cloudfunctions.net/createroom?logs=2
