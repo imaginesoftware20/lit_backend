@@ -75,7 +75,7 @@ module.exports = function () {
         catch(err)
         {
             console.log(err + "     \n    " + err.message);
-            return err;
+            //return err;
         }
     }
     
@@ -249,54 +249,44 @@ module.exports = function () {
         catch(err)
         {
             console.log(err + "     \n    " + err.message);
-            return err;
+            //return err;
         }
     }
 
     this.transac = function(pa, pb, card, db, gameid, playera, playerb, aliasa, aliasb, logs, logs_count)
     {
-        if(pb.includes(card))
+        var current_log;
+        try
         {
-          try
-          {
-            //Remove card from Second Player's Hand            
-            pb.splice(pb.indexOf(card),1);
-            
-            //Add card to First Player's Hand
-            pa.push(card);
-            pa.sort(compare);
-            
-            update_cards(db, gameid, pa, playera); 
-            update_cards(db, gameid, pb, playerb); 
-
-            var current_log = aliasa + " successfully snatched " + card + " from " + aliasb + "'s cripling hands.";
-            this.update_logs(db, gameid, logs, logs_count, current_log);
-
-          }
-          catch(err)
-          {
-            console.log(err + "     \n    " + err.message);
-            return err;
-          }
-          
-          return true;
-        }
-        else
-        {
-            try
+            if(pb.includes(card))
             {
-                var current_log = aliasa + " was brutally denied by " + aliasb + " for " + card;
+                //Remove card from Second Player's Hand            
+                pb.splice(pb.indexOf(card),1);
+                
+                //Add card to First Player's Hand
+                pa.push(card);
+                pa.sort(compare);
+                
+                update_cards(db, gameid, pa, playera); 
+                update_cards(db, gameid, pb, playerb); 
+
+                current_log = aliasa + " successfully snatched " + card + " from " + aliasb + "'s cripling hands.";
+                this.update_logs(db, gameid, logs, logs_count, current_log);
+                return true;
+            }
+            else
+            {
+                current_log = aliasa + " was brutally denied by " + aliasb + " for " + card;
                 this.update_logs(db, gameid, logs, logs_count, current_log);
                 return false;
             }
-            catch(err)
-            {
-                console.log(err + "     \n    " + err.message);
-                return err;
-            }
+        }
+        catch(err)
+        {
+            console.log(err + "     \n    " + err.message);
+            return err;
         }
     }
-
 
     this.setdrop = function(db, gameid, success)
     {
@@ -314,7 +304,7 @@ module.exports = function () {
         catch(err)
         {
             console.log(err + "     \n    " + err.message);
-            return err;
+            //return err;
         }
     }
 
@@ -394,7 +384,7 @@ module.exports = function () {
         catch(err)
         {
             console.log(err + "     \n    " + err.message);
-            return err;
+            //return err;
         }
     }
 

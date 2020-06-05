@@ -292,15 +292,15 @@ exports.drop = functions.https.onRequest(async (req, res) => {
         var success = service.drop(cardsa, cardsb, cardsc, db, gameid, dropped_sets, plcards);
         service.setscore(playera, db, gameid, success, score_odd, score_even);
         var current_dropped_set = service.set_name(cardsa[0]);
-
+        var current_log;
         if (success === true)
         {
-          var current_log = aliasa + " correctly dropped the set " + current_dropped_set;
+          current_log = aliasa + " correctly dropped the set " + current_dropped_set;
           service.update_logs(db, gameid, logs, logs_count, current_log);
         }
         else
         {
-          var current_log = aliasa + " incorrectly dropped " + current_dropped_set;
+          current_log = aliasa + " incorrectly dropped " + current_dropped_set;
           service.update_logs(db, gameid, logs, logs_count, current_log);
           service.wrongdrop(db, gameid, current_dropped_set, plcards);
         }
@@ -370,7 +370,7 @@ exports.transfer = functions.https.onRequest(async (req, res) => {
             res.status(400).send({ error: "Transfer not legal"}).end();
             return;
         }
-        return null;
+        return;
       },
       //Send the error back as respond
       (errorObject) => {
