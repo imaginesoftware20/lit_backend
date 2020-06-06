@@ -22,11 +22,16 @@ module.exports = function () {
         ["diamonds_8","jokers"], ["spades_8","jokers"], ["hearts_8","jokers"], 
         ["clubs_8","jokers"], ["joker_b","jokers"], ["joker_r","jokers"] ]); 
 
-
-    this.set_name = function(card)
+    this.set_name = function(cardsa, cardsb, cardsc)
     {
-        return mapping.get(card);
+        if(cardsa.length!==0)
+        return mapping.get(cardsa[0]);
+        else if(cardsb.length!==0)
+        return mapping.get(cardsb[0]);
+        else
+        return mapping.get(cardsc[0]);
     }    
+
     function compare(a , b) 
     {
         try
@@ -393,7 +398,8 @@ module.exports = function () {
         try
         {
             var i=0;
-            var current_dropped_set = mapping.get(cardsa[0]);
+            var current_dropped_set = this.set_name(cardsa,cardsb,cardsc);
+
             if(dropped_sets === "")
             {
                 dropped_sets = [];

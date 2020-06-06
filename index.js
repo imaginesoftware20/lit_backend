@@ -291,7 +291,8 @@ exports.drop = functions.https.onRequest(async (req, res) => {
         //Check if the transaction was successful or not
         var success = service.drop(cardsa, cardsb, cardsc, db, gameid, dropped_sets, plcards);
         service.setscore(playera, db, gameid, success, score_odd, score_even);
-        var current_dropped_set = service.set_name(cardsa[0]);
+
+        var current_dropped_set = service.set_name(cardsa,cardsb,cardsc);
         var current_log;
         if (success === true)
         {
