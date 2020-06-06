@@ -72,16 +72,16 @@ exports.createroom = functions.https.onRequest(async (req, res) => {
   //Setting value in DB
   var Ref = ref.child(ranstr);
   Ref.set({
-    1: { cards: cards.p1, "no_of_cards": 9, "alias": "-", "userid": "-" },
-    2: { cards: cards.p2, "no_of_cards": 9, "alias": "-", "userid": "-" },
-    3: { cards: cards.p3, "no_of_cards": 9, "alias": "-", "userid": "-" },
-    4: { cards: cards.p4, "no_of_cards": 9, "alias": "-", "userid": "-" },
-    5: { cards: cards.p5, "no_of_cards": 9, "alias": "-", "userid": "-" },
-    6: { cards: cards.p6, "no_of_cards": 9, "alias": "-", "userid": "-" },
+    1: { cards: cards.p1, "no_of_cards": 9, "alias": "p1", "userid": "-" },
+    2: { cards: cards.p2, "no_of_cards": 9, "alias": "p2", "userid": "-" },
+    3: { cards: cards.p3, "no_of_cards": 9, "alias": "p3", "userid": "-" },
+    4: { cards: cards.p4, "no_of_cards": 9, "alias": "p4", "userid": "-" },
+    5: { cards: cards.p5, "no_of_cards": 9, "alias": "p5", "userid": "-" },
+    6: { cards: cards.p6, "no_of_cards": 9, "alias": "p6", "userid": "-" },
     logs_count: parseInt(logs),
-    logs: "",
+    logs: ["none"],
     turn: 1,
-    dropped_sets: "",
+    dropped_sets: ["none"],
     last_transaction_drop: false,
     score_odd: 0,
     score_even: 0
@@ -237,14 +237,17 @@ exports.drop = functions.https.onRequest(async (req, res) => {
   {
     cardsa = [];
   }
+  else cardsa = cardsa.split(",");
   if(cardsb === undefined)
   {
     cardsb = [];
   }
+  else cardsb = cardsb.split(",");
   if(cardsc === undefined)
   {
     cardsc = [];
   }
+  else cardsc = cardsc.split(",");
 
   if((playera%2===0 && (playerb%2!==0 || playerc%2!==0)) || (playera%2!==0 && (playerb%2===0 || playerc%2===0)))
   {

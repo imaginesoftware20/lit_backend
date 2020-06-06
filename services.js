@@ -230,7 +230,7 @@ module.exports = function () {
     {
         try 
         {
-            if(logs === "")
+            if(logs[0] === "none")
             {
                 logs = [];
             }
@@ -238,9 +238,8 @@ module.exports = function () {
             {
                 logs.splice(0,1);
             }
-            
             logs.push(current_log);
-            
+
             var Ref = db.ref();
 
             //Update logs in DB
@@ -275,7 +274,7 @@ module.exports = function () {
                 update_cards(db, gameid, pa, playera); 
                 update_cards(db, gameid, pb, playerb); 
 
-                current_log = aliasa + " successfully snatched " + card + " from " + aliasb + "'s cripling hands.";
+                current_log = aliasa + " successfully snatched " + card + " from " + aliasb + "'s crippling hands.";
                 this.update_logs(db, gameid, logs, logs_count, current_log);
                 return true;
             }
@@ -400,11 +399,11 @@ module.exports = function () {
             var i=0;
             var current_dropped_set = this.set_name(cardsa,cardsb,cardsc);
 
-            if(dropped_sets === "")
-            {
-                dropped_sets = [];
-            }
             dropped_sets.push(current_dropped_set);
+            if(dropped_sets[0] === "none")
+            {
+                dropped_sets.splice(0,1);
+            }
             
             var ref = db.ref();
             var usersRef = ref.child(gameid);
