@@ -185,7 +185,7 @@ exports.transaction = functions.https.onRequest(async (req, res) => {
         var logs = newPost['logs'];
         var logs_count = newPost['logs_count'];
         var aliasa = newPost[playera]['alias'];
-        var aliasb = newPost[playera]['alias'];
+        var aliasb = newPost[playerb]['alias'];
         
         //Check if the transaction was successful or not
         var success = service.transac(pa, pb, card, db, gameid, playera, playerb, aliasa, aliasb, logs, logs_count);
