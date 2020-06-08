@@ -286,25 +286,27 @@ exports.drop = functions.https.onRequest(async (req, res) => {
 
         var logs = newPost['logs'];
         var logs_count = newPost['logs_count'];
-        var aliasa = newPost[playera]['alias'];
+        var turn = newPost['turn'];
+        var aliasa = newPost[turn]['alias'];
         var score_odd = newPost['score_odd'];
         var score_even = newPost['score_even'];
         dropped_sets = newPost['dropped_sets'];
         
-        //Check if the transaction was successful or not
-        var success = service.drop(cardsa, cardsb, cardsc, db, gameid, dropped_sets, plcards);
-        service.setscore(playera, db, gameid, success, score_odd, score_even);
-
         var current_dropped_set = service.set_name(cardsa,cardsb,cardsc);
+        var setName = service.edit_set_name(current_dropped_set);
+        //Check if the transaction was successful or not
+        var success = service.drop(cardsa, cardsb, cardsc, db, gameid, dropped_sets, plcards, setName);
+        service.setscore(playera, db, gameid, success, score_odd, score_even);
+        
         var current_log;
         if (success === true)
         {
-          current_log = aliasa + " correctly dropped the set " + current_dropped_set;
+          current_log = aliasa + " correctly dropped the set " + setName;
           service.update_logs(db, gameid, logs, logs_count, current_log);
         }
         else
         {
-          current_log = aliasa + " incorrectly dropped " + current_dropped_set;
+          current_log = aliasa + " incorrectly dropped " + setName;
           service.update_logs(db, gameid, logs, logs_count, current_log);
           service.wrongdrop(db, gameid, current_dropped_set, plcards);
         }

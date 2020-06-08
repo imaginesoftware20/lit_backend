@@ -21,6 +21,11 @@ module.exports = function () {
         ["diamonds_q","diamonds_higher"], ["diamonds_k","diamonds_higher"], ["diamonds_a","diamonds_higher"], 
         ["diamonds_8","jokers"], ["spades_8","jokers"], ["hearts_8","jokers"], 
         ["clubs_8","jokers"], ["joker_b","jokers"], ["joker_r","jokers"] ]); 
+    
+    var card_names = new Map([
+        ["a","Ace"], ["k","King"], ["q","Queen"], ["j","Jack"], ["t","Ten"], ["9","Nine"], ["8","Eight"], ["7","Seven"], ["6","Six"],
+        ["5","Five"], ["4","Four"], ["3","Three"], ["2","Two"],
+    ]);
 
     this.set_name = function(cardsa, cardsb, cardsc)
     {
@@ -31,6 +36,28 @@ module.exports = function () {
         else
         return mapping.get(cardsc[0]);
     }    
+
+    this.edit_set_name = function(set)
+    {
+        var setName = set.split("_");
+        return setName[1].charAt(0).toUpperCase() + setName[1].slice(1) + " " + setName[0].charAt(0).toUpperCase() + setName[0].slice(1);
+    }
+
+    this.edit_card_string = function(card)
+    {
+        var num = card.charAt(card.length-1);
+        var setname = card.substring(0,card.length-2);
+        setname = setname.charAt(0).toUpperCase() + setname.slice(1);
+        if(num === 'b')
+        {
+            return "Black Joker";
+        }
+        if(num === 'r')
+        {
+            return "Red Joker";
+        }
+        return card_names.get(num) + " of "+ setname;
+    }
 
     function compare(a , b) 
     {
@@ -274,13 +301,13 @@ module.exports = function () {
                 update_cards(db, gameid, pa, playera); 
                 update_cards(db, gameid, pb, playerb); 
 
-                current_log = aliasa + " successfully snatched " + card + " from " + aliasb + "'s crippling hands.";
+                current_log = aliasa + " successfully snatched " + this.edit_card_string(card) + " from " + aliasb + "'s crippling hands.";
                 this.update_logs(db, gameid, logs, logs_count, current_log);
                 return true;
             }
             else
             {
-                current_log = aliasa + " was brutally denied by " + aliasb + " for " + card;
+                current_log = aliasa + " was brutally denied by " + aliasb + " for " + this.edit_card_string(card) + " and left to cry in the corner.";
                 this.update_logs(db, gameid, logs, logs_count, current_log);
                 return false;
             }
@@ -392,14 +419,13 @@ module.exports = function () {
         }
     }
 
-    this.drop = function(cardsa, cardsb, cardsc, db, gameid, dropped_sets, plcards)
+    this.drop = function(cardsa, cardsb, cardsc, db, gameid, dropped_sets, plcards, setName)
     {
         try
         {
             var i=0;
-            var current_dropped_set = this.set_name(cardsa,cardsb,cardsc);
-
-            dropped_sets.push(current_dropped_set);
+            
+            dropped_sets.push(setName);
             if(dropped_sets[0] === "none")
             {
                 dropped_sets.splice(0,1);
