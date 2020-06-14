@@ -23,8 +23,12 @@ module.exports = function () {
         ["clubs_8","jokers"], ["joker_b","jokers"], ["joker_r","jokers"] ]); 
     
     var card_names = new Map([
-        ["a","Ace"], ["k","King"], ["q","Queen"], ["j","Jack"], ["t","Ten"], ["9","Nine"], ["8","Eight"], ["7","Seven"], ["6","Six"],
-        ["5","Five"], ["4","Four"], ["3","Three"], ["2","Two"],
+        ["a","A"], ["k","K"], ["q","Q"], ["j","J"], ["t","10"], ["9","9"], ["8","8"], ["7","7"], ["6","6"],
+        ["5","5"], ["4","4"], ["3","3"], ["2","2"],
+    ]);
+//  Q 10 9 8 7 6 5 4 3 2
+    var set_symbol = new Map([
+        ["spades","♠️"], ["hearts","♥️"], ["clubs","♣️"], ["diamonds","♦️"]
     ]);
 
     this.set_name = function(cardsa, cardsb, cardsc)
@@ -40,14 +44,13 @@ module.exports = function () {
     this.edit_set_name = function(set)
     {
         var setName = set.split("_");
-        return setName[1].charAt(0).toUpperCase() + setName[1].slice(1) + " " + setName[0].charAt(0).toUpperCase() + setName[0].slice(1);
+        return setName[1].charAt(0).toUpperCase() + setName[1].slice(1) + " " + set_symbol.get(setName[0]);
     }
 
     this.edit_card_string = function(card)
     {
         var num = card.charAt(card.length-1);
         var setname = card.substring(0,card.length-2);
-        setname = setname.charAt(0).toUpperCase() + setname.slice(1);
         if(num === 'b')
         {
             return "Black Joker";
@@ -56,7 +59,7 @@ module.exports = function () {
         {
             return "Red Joker";
         }
-        return card_names.get(num) + " of "+ setname;
+        return card_names.get(num) + set_symbol.get(setname);
     }
 
     function compare(a , b) 
@@ -134,13 +137,13 @@ module.exports = function () {
             let dt = String(new Date());
             let dtstr = dt.toString().split(" ").join("");
             let result           = '';
-            let characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let characters       = 'abcdefghijklmnopqrstuvwxyz0123456789';
             let charactersLength = characters.length;
-            for ( let i = 0; i < 10; i++ ) 
+            for ( let i = 0; i < 4; i++ ) 
             {
             result += characters.charAt(Math.floor(Math.random() * charactersLength));
             }
-            return result + dtstr.substring(0,dtstr.search("GMT")) + Date.now();
+            return result;
 
         }
         catch(err) 
