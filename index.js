@@ -30,21 +30,48 @@ var db = admin.database();
     res.redirect(303, snapshot.ref.toString());
   });*/
 
+exports.checkappversion = functions.https.onRequest(async (req, res) => {
+  /**
+   * Validating the Key
+   */
+  let code = req.get('key');
+  if(service.validate_key(code) === false){
+    res.status(400).send({ error: "Bhak Bhosadike"}).end();
+    return;
+  }
+
+  var userAppVersion = req.query.appversion;
+  
+  var ref = db.ref('app_version');
+
+  ref.on("value", (snapshot) => {
+      
+    var newPost = snapshot.val();  
+
+    if(newPost === userAppVersion) res.send({"forced_update" : false});
+    else res.send({"forced_update" : true});
+
+  },
+  //Send the error back as respond
+  (errorObject) => {
+    res.send("The read failed: " + errorObject.code);
+  });
+
+  });
+
 //API to Create a Room
 exports.createroom = functions.https.onRequest(async (req, res) => {
-
-  // Decode the Key from Header
+  /**
+   * Validating the Key
+   */
   let code = req.get('key');
-  const words = service.words(code);
-
-  //Check if the hit is genuine
-  if(words[0] !== service.key())
-  {
+  if(service.validate_key(code) === false){
     res.status(400).send({ error: "Bhak Bhosadike"}).end();
     return;
   }
 
   //Get the userid from the decoded key
+  const words = service.words(code);
   const userid = words[1];
   
   //Get the values from param
@@ -82,7 +109,7 @@ exports.createroom = functions.https.onRequest(async (req, res) => {
     logs: ["none"],
     turn: 1,
     dropped_sets: ["none"],
-    last_transaction_drop: false,
+    last_transaction_drop: null,
     score_odd: 0,
     score_even: 0
   });
@@ -92,22 +119,77 @@ exports.createroom = functions.https.onRequest(async (req, res) => {
   
 });
 
+//API for a rematch
+exports.rematch = functions.https.onRequest(async (req, res) => {
+  /**
+   * Validating the Key
+   */
+  let code = req.get('key');
+  if(service.validate_key(code) === false){
+    res.status(400).send({ error: "Bhak Bhosadike"}).end();
+    return;
+  }
+
+  //Connect to DB
+  var ref = db.ref();
+  
+  //Create Gameid of a random string
+  const gameID = req.query.gameid; 
+  
+  //Get a shuffled deck of cards
+  const shuffle = service.shuffle();
+
+  //Divide the cards between players
+  const cards = service.cards(shuffle);
+
+  //Setting value in DB
+  var Ref = ref.child(gameID);
+  Ref.update({
+    logs: ["none"],
+    turn: 1,
+    dropped_sets: ["none"],
+    last_transaction_drop: null,
+    score_odd: 0, 
+    score_even: 0
+  });
+
+  for(player=1;player<=6;player++){
+      var playerRef = Ref.child(player);
+      var playersCards;
+
+      if(player === 1) playersCards = cards.p1;
+      else if(player === 2) playersCards = cards.p2;
+      else if(player === 3) playersCards = cards.p3;
+      else if(player === 4) playersCards = cards.p4;
+      else if(player === 5) playersCards = cards.p5;
+      else if(player === 6) playersCards = cards.p6; 
+
+      playerRef.update({
+        "no_of_cards": 9,
+        "cards": playersCards
+      });
+  }
+
+  //Send the respond back
+  res.send({ gameid: gameID });
+  
+});
+
 
 //API to Create a Room
 exports.joinroom = functions.https.onRequest(async (req, res) => {
-  
-  // Decode the Key from Header
+  /**
+   * Validating the Key
+   */
   let code = req.get('key');
-  const words = service.words(code);
-
-  //Check if the hit is genuine
-  if(words[0] !== service.key())
-  {
+  
+  if(service.validate_key(code) === false){
     res.status(400).send({ error: "Bhak Bhosadike"}).end();
     return;
   }
 
   //Get the userid from the decoded key
+  const words = service.words(code);
   const userid = words[1];
 
   //Get the values from param
@@ -119,7 +201,8 @@ exports.joinroom = functions.https.onRequest(async (req, res) => {
   var ref = db.ref(gameid);
   
   //Update alias in db
-  var usersRef = ref.child(playerno);
+  var usersRef = ref.child(playerno); 
+
   usersRef.update({
     "alias": alias,
     "userid": userid
@@ -140,19 +223,18 @@ exports.joinroom = functions.https.onRequest(async (req, res) => {
 });
     
 exports.transaction = functions.https.onRequest(async (req, res) => {
-
-  // Decode the Key from Header
+  /**
+   * Validating the Key
+   */
   let code = req.get('key');
-  const words = service.words(code);
-
-  //Check if the hit is genuine
-  if(words[0] !== service.key())
-  {
+  
+  if(service.validate_key(code) === false){
     res.status(400).send({ error: "Bhak Bhosadike"}).end();
     return;
   }
 
   //Get the userid from the decoded key
+  const words = service.words(code);
   const userid = words[1];
 
   //Get the values from param
@@ -167,7 +249,7 @@ exports.transaction = functions.https.onRequest(async (req, res) => {
     return;
   }
 
-  service.setdrop(db, gameid, false);
+  service.setdrop(db, gameid, null);
 
   //Declare 2 arrays to store cards of the 2 players
   var pa = [], pb = [];
@@ -209,19 +291,18 @@ exports.transaction = functions.https.onRequest(async (req, res) => {
 });
 
 exports.drop = functions.https.onRequest(async (req, res) => {
-
-  // Decode the Key from Header
+  /**
+   * Validating the Key
+   */
   let code = req.get('key');
-  const words = service.words(code);
-
-  //Check if the hit is genuine
-  if(words[0] !== service.key())
-  {
+  
+  if(service.validate_key(code) === false){
     res.status(400).send({ error: "Bhak Bhosadike"}).end();
     return;
   }
 
   //Get the userid from the decoded key
+  const words = service.words(code);
   const userid = words[1];
 
   //Get the values from param
@@ -303,12 +384,14 @@ exports.drop = functions.https.onRequest(async (req, res) => {
         {
           current_log = aliasa + " correctly dropped the set " + setName;
           service.update_logs(db, gameid, logs, logs_count, current_log);
+          service.setdrop(db, gameid, true);
         }
         else
         {
           current_log = aliasa + " incorrectly dropped " + setName;
           service.update_logs(db, gameid, logs, logs_count, current_log);
           service.wrongdrop(db, gameid, current_dropped_set, plcards);
+          service.setdrop(db, gameid, false);
         }
 
         res.send({ was_successful: success });
@@ -328,19 +411,18 @@ exports.drop = functions.https.onRequest(async (req, res) => {
 
 
 exports.transfer = functions.https.onRequest(async (req, res) => {
-
-  // Decode the Key from Header
+  /**
+   * Validating the Key
+   */
   let code = req.get('key');
-  const words = service.words(code);
-
-  //Check if the hit is genuine
-  if(words[0] !== service.key())
-  {
+  
+  if(service.validate_key(code) === false){
     res.status(400).send({ error: "Bhak Bhosadike"}).end();
     return;
   }
 
   //Get the userid from the decoded key
+  const words  = service.words(code);
   const userid = words[1];
 
   //Get the values from param
@@ -365,7 +447,7 @@ exports.transfer = functions.https.onRequest(async (req, res) => {
         console.log(newPost['turn']);
         console.log(newPost['last_transaction_drop']);
         //Check if the transfer is legal or not
-        if ((newPost['turn'] === parseInt(playera)) && (newPost['last_transaction_drop'] === true))
+        if ((newPost['turn'] === parseInt(playera)) && (newPost['last_transaction_drop'] === true || newPost['last_transaction_drop'] === false))
         {
             //Update player turn in DB
             var success = service.transf(db, gameid, playerb);
@@ -392,19 +474,18 @@ exports.transfer = functions.https.onRequest(async (req, res) => {
 
 
 exports.leaveroom = functions.https.onRequest(async (req, res) => {
-
-  // Decode the Key from Header
+  /**
+   * Validating the Key
+   */
   let code = req.get('key');
-  const words = service.words(code);
-
-  //Check if the hit is genuine
-  if(words[0] !== service.key())
-  {
+  
+  if(service.validate_key(code) === false){
     res.status(400).send({ error: "Bhak Bhosadike"}).end();
     return;
   }
 
   //Get the userid from the decoded key
+  const words = service.words(code);
   const userid = words[1];
 
   //Get the values from param
@@ -419,6 +500,21 @@ exports.leaveroom = functions.https.onRequest(async (req, res) => {
   usersRef.update({
     "connected": false
   });
+
+  // var allDisconnected = service.checkIfAllDisconnected(ref);
+
+  // console.log(allDisconnected);
+
+  // if(allDisconnected === true){
+  //   console.log("All disconnected");
+    // db.ref().child(gameid).remove();
+    // gamesInfoRef = db.ref("gamesinfo");
+    // gamesInfoRef.child(gameid).update({
+    //     status: "inactive"
+    // });
+  // }else{
+  //   console.log("Not all disconnected");
+  // }
 
   res.status(200).send();
   

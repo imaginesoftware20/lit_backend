@@ -1,7 +1,10 @@
 const person = require('./person.js');
+const { isNull } = require('lodash');
 
 module.exports = function () {
-    
+    /** 
+     * Mapping every card to its half-suite
+    */
     var mapping = new Map([ 
         ["spades_2","spades_lower"], ["spades_3","spades_lower"], ["spades_4","spades_lower"],
         ["spades_5","spades_lower"], ["spades_6","spades_lower"], ["spades_7","spades_lower"],
@@ -30,6 +33,20 @@ module.exports = function () {
     var set_symbol = new Map([
         ["spades","♠️"], ["hearts","♥️"], ["clubs","♣️"], ["diamonds","♦️"]
     ]);
+
+    this.validate_key = function(code)
+    {
+        // Decode the Key from Header
+        const words = this.words(code);
+
+        //Check if the hit is genuine
+        if(words[0] !== this.key())
+        {
+            return false;
+        }
+
+        return true;
+    }
 
     this.set_name = function(cardsa, cardsb, cardsc)
     {
@@ -141,7 +158,7 @@ module.exports = function () {
             let charactersLength = characters.length;
             for ( let i = 0; i < 4; i++ ) 
             {
-            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
             }
             return result;
 
@@ -329,11 +346,11 @@ module.exports = function () {
             var Ref = db.ref();
 
             //Update Cards of players in DB
-            var usersRef = Ref.child(gameid);
+            var usersRef = Ref.child(gameid);   
             usersRef.update({
                 "last_transaction_drop": success
             });
-
+            
         }
         catch(err)
         {
@@ -352,7 +369,6 @@ module.exports = function () {
             var usersRef = Ref.child(gameid);
             usersRef.update({
                 "turn": parseInt(playerb),
-                "last_transaction_drop": false
             });
             return true;
 
@@ -438,7 +454,6 @@ module.exports = function () {
             var usersRef = ref.child(gameid);
             //Update Cards of players in DB
             usersRef.update({
-                "last_transaction_drop": true,
                 "dropped_sets": dropped_sets
             });
 
@@ -497,4 +512,39 @@ module.exports = function () {
             return err;
         }
     }
+
+    // this.checkIfAllDisconnected = function(gameRef){
+    //     var allDisconnected = true;
+
+    //     for(var player = 1;player<=6;player++){
+    //         playerRef = gameRef.child(player);
+
+    //         playerRef.on("value", (snapshot) => {
+    //             var newPost = snapshot.val();
+
+    //             console.log("NewPost Value"+newPost.toString());
+
+    //             if(newPost["connected"] === undefined){
+    //                 console.log(player);
+    //                 allDisconnected = false;
+    //             }
+    //         },
+    //         //Send the error back as respond
+    //         (errorObject) => {
+    //             res.send("The read failed: " + errorObject.code);
+    //         });
+
+    //         if(allDisconnected === false) return allDisconnected;
+    //     }
+
+    //     return allDisconnected;
+    // }
+
+    // this.removeGameEntry = function(dbRef, gameID){
+    //     gamesInfoRef = erf.child("gamesinfo");
+
+    //     gamesInfoRef.update({
+
+    //     });
+    // }
 }
