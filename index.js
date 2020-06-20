@@ -430,10 +430,15 @@ exports.transfer = functions.https.onRequest(async (req, res) => {
   const playerb = req.query.playerb;
   const gameid  = req.query.gameid;
 
-  /*if((playera%2==0 && playerb%2!==0 ) || (playera%2!==0 && playerb%2==0))
+  if((playera%2===0 && playerb%2===0 ) || (playera%2!==0 && playerb%2!==0))
   {
-    res.status(400).send({ error: "Players not in the same team"});
-  }*/
+      service.setdrop(db, gameid, null);
+  }
+  else
+  {
+      service.setdrop(db, gameid, true);
+  }
+
 
   try
   {

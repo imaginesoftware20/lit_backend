@@ -368,7 +368,7 @@ module.exports = function () {
             //Update Cards of players in DB
             var usersRef = Ref.child(gameid);
             usersRef.update({
-                "turn": parseInt(playerb),
+                "turn": parseInt(playerb)
             });
             return true;
 
