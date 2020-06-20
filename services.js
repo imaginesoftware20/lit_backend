@@ -60,6 +60,8 @@ module.exports = function () {
 
     this.edit_set_name = function(set)
     {
+        if(set === "jokers")
+        return set.charAt(0).toUpperCase() + set.slice(1)
         var setName = set.split("_");
         return setName[1].charAt(0).toUpperCase() + setName[1].slice(1) + " " + set_symbol.get(setName[0]);
     }
