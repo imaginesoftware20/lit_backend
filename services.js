@@ -323,13 +323,13 @@ module.exports = function () {
                 update_cards(db, gameid, pa, playera); 
                 update_cards(db, gameid, pb, playerb); 
 
-                current_log = aliasa + " successfully snatched " + this.edit_card_string(card) + " from " + aliasb + "'s crippling hands.";
+                current_log = aliasa + " took " + this.edit_card_string(card) + " from " + aliasb;
                 this.update_logs(db, gameid, logs, logs_count, current_log);
                 return true;
             }
             else
             {
-                current_log = aliasa + " was brutally denied by " + aliasb + " for " + this.edit_card_string(card) + " and left to cry in the corner.";
+                current_log = aliasb + " denied " + aliasa + " for " + this.edit_card_string(card);
                 this.update_logs(db, gameid, logs, logs_count, current_log);
                 return false;
             }

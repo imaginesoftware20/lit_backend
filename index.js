@@ -430,15 +430,6 @@ exports.transfer = functions.https.onRequest(async (req, res) => {
   const playerb = req.query.playerb;
   const gameid  = req.query.gameid;
 
-  if((playera%2===0 && playerb%2===0 ) || (playera%2!==0 && playerb%2!==0))
-  {
-      service.setdrop(db, gameid, null);
-  }
-  else
-  {
-      service.setdrop(db, gameid, true);
-  }
-
 
   try
   {
@@ -462,6 +453,14 @@ exports.transfer = functions.https.onRequest(async (req, res) => {
         {
             res.status(400).send({ error: "Transfer not legal"}).end();
             return;
+        }
+        if((playera%2===0 && playerb%2===0 ) || (playera%2!==0 && playerb%2!==0))
+        {
+            service.setdrop(db, gameid, null);
+        }
+        else
+        {
+            service.setdrop(db, gameid, true);
         }
         return;
       },
