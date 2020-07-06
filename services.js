@@ -515,38 +515,15 @@ module.exports = function () {
         }
     }
 
-    // this.checkIfAllDisconnected = function(gameRef){
-    //     var allDisconnected = true;
+    this.checkIfAllDisconnected = function(newPost){ 
+        var allDisconnected = 1;
+        for(var player=1;player<=6;player++){
+            if(newPost[player]["connected"] === true){
+                allDisconnected = 0;
+                break;
+            }
+        }
 
-    //     for(var player = 1;player<=6;player++){
-    //         playerRef = gameRef.child(player);
-
-    //         playerRef.on("value", (snapshot) => {
-    //             var newPost = snapshot.val();
-
-    //             console.log("NewPost Value"+newPost.toString());
-
-    //             if(newPost["connected"] === undefined){
-    //                 console.log(player);
-    //                 allDisconnected = false;
-    //             }
-    //         },
-    //         //Send the error back as respond
-    //         (errorObject) => {
-    //             res.send("The read failed: " + errorObject.code);
-    //         });
-
-    //         if(allDisconnected === false) return allDisconnected;
-    //     }
-
-    //     return allDisconnected;
-    // }
-
-    // this.removeGameEntry = function(dbRef, gameID){
-    //     gamesInfoRef = erf.child("gamesinfo");
-
-    //     gamesInfoRef.update({
-
-    //     });
-    // }
+        return allDisconnected;
+    }
 }
